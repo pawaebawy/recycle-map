@@ -32,13 +32,9 @@ export default function TaskDetailPage() {
   const user = useAuthStore((s) => s.user)
   const getTask = useDataStore((s) => s.getTask)
   const takeTask = useDataStore((s) => s.takeTask)
-  const completeTask = useDataStore((s) => s.completeTask)
   const data = useDataStore((s) => s.data)
 
   const task = id ? getTask(id) : null
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
-  const [error, setError] = useState('')
   const [galleryIndex, setGalleryIndex] = useState(0)
 
   if (!id) return <Navigate to="/" replace />
@@ -56,9 +52,11 @@ export default function TaskDetailPage() {
   const points = task.points ?? 10
   const canTake = user && task.status === 'active'
   const isMine = user && task.takenBy === user.id
-  const canComplete = isMine && task.status === 'in_progress'
+  const canSubmit = isMine && task.status === 'in_progress'
 
-  const gallery = [task.photoBefore, task.photoAfter].filter(Boolean) as string[]
+  const photosBefore = task.photosBefore ?? [task.photoBefore]
+  const photosAfter = task.photosAfter ?? (task.photoAfter ? [task.photoAfter] : [])
+  const gallery = [...photosBefore, ...photosAfter]
 
   const nearbyTasks = data.tasks
     .filter((t) => t.id !== task.id && t.status === 'active')
@@ -68,40 +66,6 @@ export default function TaskDetailPage() {
     }))
     .sort((a, b) => a.dist - b.dist)
     .slice(0, 4)
-
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setPhotoFile(file)
-      setPhotoPreview(URL.createObjectURL(file))
-    }
-  }
-
-  const handleComplete = async () => {
-    if (!photoFile || !user) return
-    setError('')
-    const coords = await new Promise<{ lat: number; lng: number } | null>((resolve) => {
-      if (!navigator.geolocation) {
-        resolve(null)
-        return
-      }
-      navigator.geolocation.getCurrentPosition(
-        (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
-        () => resolve(null),
-        { enableHighAccuracy: true }
-      )
-    })
-    if (!coords) {
-      setError('Нужен доступ к геолокации.')
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => {
-      const ok = completeTask(task.id, reader.result as string, coords)
-      if (!ok) setError('Вы должны быть в радиусе 50 м от точки задачи.')
-    }
-    reader.readAsDataURL(photoFile)
-  }
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -178,34 +142,17 @@ export default function TaskDetailPage() {
               onClick={() => user && takeTask(task.id, user.id)}
               className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 font-medium"
             >
-              Взять задачу (+{points} баллов)
+              Забронировать (+{points} баллов)
             </button>
           )}
 
-          {canComplete && (
-            <div className="space-y-3 p-4 bg-stone-50 rounded-lg">
-              <p className="font-medium text-stone-700">
-                Загрузите фото «после» (геолокация будет проверена)
-              </p>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handlePhotoChange}
-                className="block w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-emerald-50 file:text-emerald-700"
-              />
-              {photoPreview && (
-                <img src={photoPreview} alt="Превью" className="w-full h-40 object-cover rounded" />
-              )}
-              {error && <p className="text-red-600 text-sm">{error}</p>}
-              <button
-                onClick={handleComplete}
-                disabled={!photoFile}
-                className="w-full bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 font-medium disabled:opacity-50"
-              >
-                Выполнить задачу
-              </button>
-            </div>
+          {canSubmit && (
+            <Link
+              to={`/task/${task.id}/submit`}
+              className="block w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 font-medium text-center"
+            >
+              Отправить на проверку
+            </Link>
           )}
 
           {isMine && task.status === 'pending_verification' && (

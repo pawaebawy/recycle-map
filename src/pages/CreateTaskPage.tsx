@@ -12,8 +12,7 @@ export default function CreateTaskPage() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [photo, setPhoto] = useState<string | null>(null)
-  const [points, setPoints] = useState(10)
+  const [photos, setPhotos] = useState<string[]>([])
   const [useGps, setUseGps] = useState(true)
 
   if (!user) return <Navigate to="/login" replace /> 
@@ -24,17 +23,19 @@ export default function CreateTaskPage() {
   }
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
+    const files = e.target.files
+    if (!files?.length) return
+    Array.from(files).forEach((file) => {
       const reader = new FileReader()
-      reader.onload = () => setPhoto(reader.result as string)
+      reader.onload = () =>
+        setPhotos((prev) => [...prev, reader.result as string])
       reader.readAsDataURL(file)
-    }
+    })
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title || !description || !photo) return
+    if (!title || !description || !photos.length) return
     if (useGps && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (p) => {
@@ -58,14 +59,16 @@ export default function CreateTaskPage() {
       description,
       lat: c.lat,
       lng: c.lng,
-      photoBefore: photo!,
+      photoBefore: photos[0]!,
+      photosBefore: photos,
       status: 'active',
       takenBy: null,
       photoAfter: null,
+      photosAfter: null,
       completedAt: null,
       verifiedBy: null,
       photoAfterCoords: null,
-      points,
+      points: 10,
       createdAt: new Date().toISOString(),
     }
     addTask(task)
@@ -92,6 +95,8 @@ export default function CreateTaskPage() {
             tasks={[]}
             onMapClick={handleMapClick}
             showClickToAdd={true}
+            previewCoords={coords}
+            initialZoom={13}
           />
           {coords && !useGps && (
             <p className="text-sm text-stone-500 mt-2">
@@ -101,22 +106,35 @@ export default function CreateTaskPage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-1">
-            Фото «до» (обязательно)
+            Фото «до» (обязательно, можно несколько)
           </label>
           <input
             type="file"
             accept="image/*"
             capture="environment"
+            multiple
             onChange={handlePhotoChange}
-            required
             className="block w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-emerald-50 file:text-emerald-700"
           />
-          {photo && (
-            <img
-              src={photo}
-              alt="Превью"
-              className="mt-2 w-full max-w-xs h-32 object-cover rounded"
-            />
+          {photos.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {photos.map((p, i) => (
+                <div key={i} className="relative">
+                  <img
+                    src={p}
+                    alt={`Фото ${i + 1}`}
+                    className="w-20 h-20 object-cover rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setPhotos((prev) => prev.filter((_, j) => j !== i))}
+                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
           )}
         </div>
         <div>
@@ -134,19 +152,6 @@ export default function CreateTaskPage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-1">
-            Баллы за выполнение
-          </label>
-          <input
-            type="number"
-            min={5}
-            max={50}
-            value={points}
-            onChange={(e) => setPoints(parseInt(e.target.value) || 10)}
-            className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">
             Описание
           </label>
           <textarea
@@ -160,7 +165,7 @@ export default function CreateTaskPage() {
         </div>
         <button
           type="submit"
-          disabled={!photo || !title || !description || (!coords && !useGps)}
+          disabled={!photos.length || !title || !description || (!coords && !useGps)}
           className="w-full bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 font-medium disabled:opacity-50"
         >
           Создать задачу

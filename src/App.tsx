@@ -10,6 +10,7 @@ import RatingPage from './pages/RatingPage'
 import VerificationPage from './pages/VerificationPage'
 import CreateTaskPage from './pages/CreateTaskPage'
 import TaskDetailPage from './pages/TaskDetailPage'
+import SubmitTaskPage from './pages/SubmitTaskPage'
 
 function App() {
   const loadData = useDataStore((s) => s.loadData)
@@ -29,6 +30,7 @@ function App() {
         <Route path="verification" element={<VerificationPage />} />
         <Route path="create" element={<CreateTaskPage />} />
         <Route path="task/:id" element={<TaskDetailPage />} />
+        <Route path="task/:id/submit" element={<SubmitTaskPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

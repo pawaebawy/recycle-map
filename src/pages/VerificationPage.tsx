@@ -47,31 +47,35 @@ export default function VerificationPage() {
                     </p>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-2 p-4">
+                <div className="p-4 space-y-4">
                   <div>
-                    <p className="text-xs font-medium text-stone-500 mb-1">До</p>
-                    <img
-                      src={task.photoBefore}
-                      alt="До"
-                      className="w-full h-32 object-cover rounded"
-                    />
+                    <p className="text-xs font-medium text-stone-500 mb-1">Фото до</p>
+                    <div className="flex gap-2 overflow-x-auto">
+                      {(task.photosBefore ?? [task.photoBefore]).map((src, i) => (
+                        <img key={i} src={src} alt={`До ${i + 1}`} className="h-32 w-32 object-cover rounded shrink-0" />
+                      ))}
+                    </div>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-stone-500 mb-1">
-                      После
-                    </p>
-                    {task.photoAfter ? (
-                      <img
-                        src={task.photoAfter}
-                        alt="После"
-                        className="w-full h-32 object-cover rounded"
-                      />
+                    <p className="text-xs font-medium text-stone-500 mb-1">Фото после</p>
+                    {(task.photosAfter ?? (task.photoAfter ? [task.photoAfter] : [])).length > 0 ? (
+                      <div className="flex gap-2 overflow-x-auto">
+                        {(task.photosAfter ?? [task.photoAfter!]).map((src, i) => (
+                          <img key={i} src={src} alt={`После ${i + 1}`} className="h-32 w-32 object-cover rounded shrink-0" />
+                        ))}
+                      </div>
                     ) : (
-                      <div className="w-full h-32 bg-stone-100 rounded flex items-center justify-center text-stone-400">
+                      <div className="h-32 bg-stone-100 rounded flex items-center justify-center text-stone-400">
                         Нет фото
                       </div>
                     )}
                   </div>
+                  {task.submitComment && (
+                    <div>
+                      <p className="text-xs font-medium text-stone-500 mb-1">Комментарий исполнителя</p>
+                      <p className="text-sm text-stone-700 p-2 bg-stone-50 rounded">{task.submitComment}</p>
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-2 p-4 border-t">
                   <button

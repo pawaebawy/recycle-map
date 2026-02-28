@@ -28,6 +28,8 @@ interface MapProps {
   onTaskClick?: (task: Task) => void
   onMapClick?: (lat: number, lng: number) => void
   showClickToAdd?: boolean
+  previewCoords?: { lat: number; lng: number } | null
+  initialZoom?: number
 }
 
 export default function MapComponent({
@@ -35,6 +37,8 @@ export default function MapComponent({
   onTaskClick,
   onMapClick,
   showClickToAdd = false,
+  previewCoords = null,
+  initialZoom = 4,
 }: MapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<Map | null>(null)
@@ -50,7 +54,7 @@ export default function MapComponent({
 
     const clusterStyle = (feature: import('ol/Feature').default) => {
       const size = feature.get('features')?.length ?? 1
-      const color = size > 1 ? 'rgb(16, 185, 129)' : getColor(feature.get('features')?.[0]?.get('task') as Task)
+      const color = size > 1 ? 'rgb(245, 158, 11)' : getColor(feature.get('features')?.[0]?.get('task') as Task)
       return new Style({
         image: new Circle({
           radius: size > 1 ? 18 : 12,
@@ -77,8 +81,8 @@ export default function MapComponent({
         vectorLayer,
       ],
       view: new View({
-        center: fromLonLat([37.6173, 55.7558]),
-        zoom: 13,
+        center: fromLonLat([60, 55]),
+        zoom: initialZoom,
       }),
     })
 
@@ -116,6 +120,33 @@ export default function MapComponent({
       source.addFeature(feature)
     })
   }, [tasks])
+
+  useEffect(() => {
+    const map = mapInstanceRef.current
+    if (!map) return
+
+    if (map.getLayers().getLength() > 2) {
+      map.removeLayer(map.getLayers().item(2))
+    }
+    if (!previewCoords) return
+
+    const previewSource = new VectorSource()
+    previewSource.addFeature(
+      new Feature(new Point(fromLonLat([previewCoords.lng, previewCoords.lat])))
+    )
+    const previewLayer = new VectorLayer({
+      source: previewSource,
+      style: new Style({
+        image: new Circle({
+          radius: 14,
+          fill: new Fill({ color: 'rgb(245, 158, 11)' }),
+          stroke: new Stroke({ color: 'white', width: 3 }),
+        }),
+      }),
+    })
+    map.addLayer(previewLayer)
+    return () => map.removeLayer(previewLayer)
+  }, [previewCoords])
 
   useEffect(() => {
     const map = mapInstanceRef.current

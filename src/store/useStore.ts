@@ -61,7 +61,7 @@ interface DataState {
   addUser: (user: User) => void
   addTask: (task: Task) => void
   takeTask: (taskId: string, userId: string) => void
-  completeTask: (taskId: string, photoAfter: string, coords: { lat: number; lng: number }) => boolean
+  completeTask: (taskId: string, data: { photos: string[]; comment?: string }, coords: { lat: number; lng: number }) => boolean
   verifyTask: (taskId: string, approved: boolean, verifierId: string) => void
   getTask: (id: string) => Task | undefined
   getUser: (id: string) => User | undefined
@@ -72,18 +72,42 @@ const initialData: AppData = {
   tasks: [],
 }
 
+const migrate = (d: AppData) => ({
+  ...d,
+  tasks: d.tasks.map((t) => ({
+    ...t,
+    points: t.points ?? 10,
+    createdAt: t.createdAt ?? t.completedAt ?? new Date().toISOString(),
+    photosBefore: t.photosBefore ?? [t.photoBefore],
+    photosAfter: t.photosAfter ?? (t.photoAfter ? [t.photoAfter] : null),
+  })),
+})
+
+async function saveToApi(data: AppData) {
+  try {
+    const res = await fetch('/api/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
 export const useDataStore = create<DataState>((set, get) => ({
   data: initialData,
   loaded: false,
   loadData: async () => {
-    const migrate = (d: AppData) => ({
-      ...d,
-      tasks: d.tasks.map((t) => ({
-        ...t,
-        points: t.points ?? 10,
-        createdAt: t.createdAt ?? t.completedAt ?? new Date().toISOString(),
-      })),
-    })
+    try {
+      const res = await fetch('/api/data')
+      if (res.ok) {
+        const data = migrate(await res.json())
+        set({ data, loaded: true })
+        return
+      }
+    } catch {}
     const stored = localStorage.getItem('app-data')
     if (stored) {
       try {
@@ -105,6 +129,7 @@ export const useDataStore = create<DataState>((set, get) => ({
     set((s) => {
       const data = { ...s.data, users: [...s.data.users, user] }
       localStorage.setItem('app-data', JSON.stringify(data))
+      saveToApi(data)
       return { data }
     })
   },
@@ -120,6 +145,7 @@ export const useDataStore = create<DataState>((set, get) => ({
         ),
       }
       localStorage.setItem('app-data', JSON.stringify(data))
+      saveToApi(data)
       return { data }
     })
   },
@@ -141,10 +167,11 @@ export const useDataStore = create<DataState>((set, get) => ({
         ),
       }
       localStorage.setItem('app-data', JSON.stringify(data))
+      saveToApi(data)
       return { data }
     })
   },
-  completeTask: (taskId, photoAfter, coords) => {
+  completeTask: (taskId, { photos, comment }, coords) => {
     const task = get().data.tasks.find((t) => t.id === taskId)
     if (!task || task.status !== 'in_progress') return false
     const dist =
@@ -152,7 +179,8 @@ export const useDataStore = create<DataState>((set, get) => ({
         Math.pow((coords.lat - task.lat) / METERS_TO_DEG, 2) +
           Math.pow((coords.lng - task.lng) / METERS_TO_DEG, 2)
       ) * 111320
-    if (dist > VERIFICATION_RADIUS_M) return false
+    // if (dist > VERIFICATION_RADIUS_M) return false
+    const photoAfter = photos[0] ?? ''
     set((s) => {
       const data = {
         ...s.data,
@@ -162,6 +190,8 @@ export const useDataStore = create<DataState>((set, get) => ({
                 ...t,
                 status: 'pending_verification' as const,
                 photoAfter,
+                photosAfter: photos,
+                submitComment: comment ?? null,
                 photoAfterCoords: coords,
                 completedAt: new Date().toISOString(),
               }
@@ -176,7 +206,8 @@ export const useDataStore = create<DataState>((set, get) => ({
             : u
         ),
       }
-      localStorage.setItem('app-data', JSON.stringify(data))
+        localStorage.setItem('app-data', JSON.stringify(data))
+      saveToApi(data)
       return { data }
     })
     return true
@@ -204,6 +235,7 @@ export const useDataStore = create<DataState>((set, get) => ({
           ),
         }
         localStorage.setItem('app-data', JSON.stringify(data))
+        saveToApi(data)
         return { data }
       } else {
         const data = {
@@ -227,6 +259,7 @@ export const useDataStore = create<DataState>((set, get) => ({
           ),
         }
         localStorage.setItem('app-data', JSON.stringify(data))
+        saveToApi(data)
         return { data }
       }
     })

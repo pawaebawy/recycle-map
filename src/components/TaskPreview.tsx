@@ -57,8 +57,18 @@ export default function TaskPreview({ task, onClose }: TaskPreviewProps) {
             onClick={() => user && takeTask(task.id, user.id)}
             className="w-full bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 font-medium text-sm"
           >
-            Взять задачу
+            Забронировать
           </button>
+        </div>
+      )}
+      {user && task.takenBy === user.id && task.status === 'in_progress' && (
+        <div className="px-4 pb-4">
+          <Link
+            to={`/task/${task.id}/submit`}
+            className="block w-full bg-amber-500 text-white py-2 rounded-lg hover:bg-amber-600 font-medium text-sm text-center"
+          >
+            Отправить на проверку
+          </Link>
         </div>
       )}
     </div>

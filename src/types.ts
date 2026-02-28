@@ -23,9 +23,12 @@ export interface Task {
   lat: number;
   lng: number;
   photoBefore: string;
+  photosBefore?: string[];
   status: TaskStatus;
   takenBy: string | null;
   photoAfter: string | null;
+  photosAfter?: string[] | null;
+  submitComment?: string | null;
   completedAt: string | null;
   verifiedBy: string | null;
   photoAfterCoords: { lat: number; lng: number } | null;
