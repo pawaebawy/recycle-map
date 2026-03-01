@@ -15,7 +15,6 @@
   .task-preview__wrap {
     height: 100%;
     box-shadow: none;
-    border-top-left-radius: 0;
   }
 }
 
@@ -32,12 +31,5 @@
   .task-preview__wrap {
     max-width: 100%;
     width: 100%;
-    border-top-right-radius: 0;
-  }
-}
-
-@media (min-width: 767px) and (max-width: 1024px) {
-  .task-preview__wrap {
-    border-bottom-left-radius: 0;
   }
 }
