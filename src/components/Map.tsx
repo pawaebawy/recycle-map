@@ -5,7 +5,7 @@ import TileLayer from 'ol/layer/Tile'
 import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import Cluster from 'ol/source/Cluster'
-import OSM from 'ol/source/OSM'
+import XYZ from 'ol/source/XYZ'
 import Feature from 'ol/Feature'
 import Point from 'ol/geom/Point'
 import { fromLonLat, toLonLat } from 'ol/proj'
@@ -74,10 +74,17 @@ export default function MapComponent({
       style: clusterStyle,
     })
 
+    const yandexLayer = new TileLayer({
+      source: new XYZ({
+        url: 'https://tiles.api-maps.yandex.ru/v1/tiles/?x={x}&y={y}&z={z}&lang=ru_RU&l=map&apikey=cb77b06b-1087-4132-840b-511580698149&maptype=future_map&projection=web_mercator',
+        maxZoom: 19,
+      }),
+    })
+
     const map = new Map({
       target: mapRef.current,
       layers: [
-        new TileLayer({ source: new OSM() }),
+        yandexLayer,
         vectorLayer,
       ],
       view: new View({

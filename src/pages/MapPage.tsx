@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useDataStore } from '../store/useStore'
 import MapComponent from '../components/Map'
 import TaskPreview from '../components/TaskPreview'
+import YandexLogo from '../../public/yandex_logo.svg'
 import type { Task } from '../types'
 
 export default function MapPage() {
@@ -28,8 +29,16 @@ export default function MapPage() {
         </p>
       </div>
       <div className="flex flex-col lg:flex-row gap-4">
-        <div className="flex-1">
+        <div className="flex-1 relative">
           <MapComponent tasks={tasks} onTaskClick={setSelectedTask} />
+
+          <a href="https://yandex.ru/maps" target="_blank">
+            <img
+              src="/yandex_logo.svg"
+              alt="Яндекс"
+              className="absolute bottom-0 right-0 w-auto h-auto"
+            />
+          </a>
         </div>
         {selectedTask && (
           <div className="lg:w-96 flex-shrink-0">
