@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useDataStore } from '../store/useStore'
 import MapComponent from '../components/Map'
 import TaskPreview from '../components/TaskPreview'
-import YandexLogo from '../../public/yandex_logo.svg'
 import type { Task } from '../types'
 
 export default function MapPage() {
@@ -28,7 +27,7 @@ export default function MapPage() {
           Жёлтые — активные (можно взять), зелёные — выполненные
         </p>
       </div>
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="map-container flex flex-col lg:flex-row gap-4">
         <div className="flex-1 relative">
           <MapComponent tasks={tasks} onTaskClick={setSelectedTask} />
 
@@ -41,7 +40,7 @@ export default function MapPage() {
           </a>
         </div>
         {selectedTask && (
-          <div className="lg:w-96 flex-shrink-0">
+          <div className="task-preview lg:w-96 flex-shrink-0">
             <TaskPreview
               task={selectedTask}
               onClose={() => setSelectedTask(null)}

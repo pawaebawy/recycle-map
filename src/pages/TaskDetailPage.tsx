@@ -49,7 +49,7 @@ export default function TaskDetailPage() {
     )
   }
 
-  const points = task.points ?? 10
+  const points = task.points ?? 100
   const canTake = user && task.status === 'active'
   const isMine = user && task.takenBy === user.id
   const canSubmit = isMine && task.status === 'in_progress'

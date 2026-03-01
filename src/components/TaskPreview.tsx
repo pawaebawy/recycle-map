@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { Task } from '../types'
 import { useAuthStore, useDataStore } from '../store/useStore'
+import { useEffect, useRef } from 'react'
 
 function formatDate(iso: string) {
   const d = new Date(iso)
@@ -24,9 +25,24 @@ export default function TaskPreview({ task, onClose }: TaskPreviewProps) {
 
   const canTake = user && task.status === 'active'
 
+  const isLinkActive = useRef(false);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      isLinkActive.current = true;
+    }, 250); // 250 мс достаточно, чтобы клик по метке не задел ссылку
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleLinkClick = (e: React.MouseEvent) => {
+    if (!isLinkActive.current) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-stone-200 overflow-hidden max-w-sm">
-      <Link to={`/task/${task.id}`} className="block">
+    <div className="task-preview__wrap bg-white rounded-xl shadow-lg border border-stone-200 overflow-hidden max-w-sm">
+      <Link to={`/task/${task.id}`} onClick={handleLinkClick} className="block">
         <img
           src={task.photoBefore}
           alt="Фото мусора"
